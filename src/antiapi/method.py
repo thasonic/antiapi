@@ -29,6 +29,7 @@ MIME_TYPES = {
     'jsonp': 'application/javascript',
     'xml': 'application/xml',
     'yaml': 'application/yaml',
+    'csv': 'text/csv',
 }
 
 # List of HTTP methods.
@@ -47,13 +48,11 @@ def api_method(http_methods, content_types, is_secure=False,
         def _method(request, *args, **kwargs):
             http_method = request.method.lower()
             if http_method in http_methods and http_method in HTTP_METHODS:
-                handler = func
-            else:
-                handler = _method_not_allowed(http_methods)
-            return process_api_method(
-                request, handler, content_types, serializer_params,
-                *args, **kwargs
-            )
+                return process_api_method(
+                    request, func, content_types, serializer_params,
+                    *args, **kwargs
+                )
+            return _method_not_allowed(http_methods)
         return _method
     return wrapper
 
@@ -183,12 +182,12 @@ def process_api_method(request, handler, content_types, serializer_params,
     except NotFoundError as e:
         return _http_error(404, unicode(e), **err_kwargs)
     except AuthError as e:
-        return _http_error(403, unicode(e), **err_kwargs)
+        return _http_error(403, e.message, **err_kwargs)
     except MultipleChoicesError as e:
         err_kwargs.update(e.body)
         return _http_error(300, unicode(e), **err_kwargs)
     except Exception as e:
-        if getattr(settings, 'API_DEBUG', True):
+        if getattr(settings, 'API_DEBUG', False):
             raise
 #        logger.exception(e)
         return _http_error(500, 'Unexpected API error', content_type=content_type)
@@ -202,6 +201,7 @@ def process_api_method(request, handler, content_types, serializer_params,
         '_pretty',
         request.form.get('_pretty')
     )
+
     response = Response(
         _serializers[content_type](data, **serializer_params),
         content_type=MIME_TYPES[content_type]
@@ -307,8 +307,6 @@ def _http_error(status_code=400, message='', content_type=None, **kwargs):
 
 
 def _method_not_allowed(allowed_methods):
-    def wrapper(*args, **kwargs):
-        response = _http_error(405, 'Method Not Allowed')
-        response['Allow'] = ', '.join(map(str.upper, allowed_methods))
-        return response
-    return wrapper
+    response = _http_error(405, 'Method Not Allowed')
+    response['Allow'] = ', '.join(map(str.upper, allowed_methods))
+    return response
