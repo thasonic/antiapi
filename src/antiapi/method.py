@@ -301,8 +301,11 @@ def _http_error(status_code=400, message='', content_type=None, **kwargs):
             data = _serializers[content_type](body, **params)
     elif message:
         data = message
-    # Todo: response.content in Django
-    response.data = data
+    if data:
+        if IS_DJANGO:
+            response.content = data
+        else:
+            response.data = data
     return response
 
 
