@@ -287,6 +287,7 @@ def _get_content_type(request, content_types, *args, **kwargs):
 
 def _http_error(status_code=400, message='', content_type=None, **kwargs):
     response = Response(status=status_code)
+    data = None
     if content_type:
         _set_header(response, 'Content-Type', MIME_TYPES[content_type])
         body = {}
@@ -301,7 +302,7 @@ def _http_error(status_code=400, message='', content_type=None, **kwargs):
             data = _serializers[content_type](body, **params)
     elif message:
         data = message
-    if data:
+    if data is not None:
         if IS_DJANGO:
             response.content = data
         else:
