@@ -12,7 +12,7 @@ class Param(dict):
     of IDEs.
     """
     def __init__(self, type, default=None, required=False, validator=None,
-                 max=None, min=None, process=None, **kwargs):
+                 max=None, min=None, process=None, values=None, **kwargs):
         """
         Note that in the body of __init__ a standard pythonic "type", "max"
         and "min" are overriden by keyword arguments.
@@ -25,6 +25,7 @@ class Param(dict):
         self['max'] = max
         self['min'] = min
         self['process'] = process
+        self['values'] = values
         for k in kwargs:
             self[k] = kwargs[k]
 
@@ -78,6 +79,10 @@ def validate(params, data, error_messages=None):
             _validation_error(param, 'value', name, error_messages, _type)
         if param.get('process'):
             values[name] = param['process'](values[name])
+        if param.get('set') and values[name] not in param['set']:
+            _validation_error(
+                param, 'set', name, error_messages, ', '.join(param['set'])
+            )
 
         error = _validate_by_type(param, values[name])
         if error:
@@ -129,6 +134,7 @@ _default_errors = {
     'value': '"%s" parameter must have a valid value of "%s" type',
     'limits': 'Value of "%s" %s',
     'custom': '"%s" parameter has a wrong value (%s)',
+    'set': '"%s" parameter has not allowed value (%s)',
 }
 
 
