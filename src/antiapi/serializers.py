@@ -44,11 +44,11 @@ def to_json(obj, is_pretty=False):
     return encoder.encode(obj)
 
 
-def to_jsonp(obj, callback, is_pretty=False):
+def to_jsonp(obj, jsonp_callback='callback', is_pretty=False):
     """
     JSONP serialization shortcut function.
     """
-    return '%s(%s);' % (callback, to_json(obj, is_pretty))
+    return '%s(%s);' % (jsonp_callback, to_json(obj, is_pretty))
 
 
 # XML serialization part.
