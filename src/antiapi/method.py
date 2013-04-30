@@ -49,7 +49,7 @@ def api_method(http_methods, content_types, is_secure=False,
             http_method = request.method.lower()
             if http_method in http_methods and http_method in HTTP_METHODS:
                 return process_api_method(
-                    request, func, content_types, serializer_params,
+                    request, func, content_types, serializer_params.copy(),
                     *args, **kwargs
                 )
             return _method_not_allowed(http_methods)
