@@ -1,3 +1,4 @@
+import logging
 from os import path
 
 try:
@@ -14,6 +15,7 @@ from .errors import ValidationError, NotFoundError, AuthError, \
     MultipleChoicesError
 from .serializers import to_json, to_xml, to_jsonp
 
+logger = logging.getLogger('antiapi')
 
 _serializers = {
     'xml': to_xml,
@@ -44,6 +46,7 @@ def api_method(http_methods, content_types, is_secure=False,
         content_types = [content_types]
     if isinstance(http_methods, basestring):
         http_methods = [http_methods]
+
     def wrapper(func):
         def _method(request, *args, **kwargs):
             http_method = request.method.lower()
@@ -127,7 +130,8 @@ class ApiMethod(object):
                 self.request.META['HTTP_X_HTTP_METHOD_OVERRIDE'].lower()
         else:
             http_method = self.request.method.lower()
-        if http_method in self.HTTP_METHODS and hasattr(self, 'http_' + http_method):
+        if (http_method in self.HTTP_METHODS and hasattr(self, 'http_' +
+                                                         http_method)):
             handler = getattr(self, http_method)
         else:
             handler = self._method_not_allowed
@@ -189,8 +193,9 @@ def process_api_method(request, handler, content_types, serializer_params,
     except Exception as e:
         if getattr(settings, 'API_DEBUG', False):
             raise
-#        logger.exception(e)
-        return _http_error(500, 'Unexpected API error', content_type=content_type)
+        logger.exception(e)
+        return _http_error(500, 'Unexpected API error',
+                           content_type=content_type)
 
     if content_type == 'jsonp' and 'jsonp_callback' not in serializer_params:
         serializer_params['jsonp_callback'] = request.args.get(
