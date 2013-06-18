@@ -1,3 +1,4 @@
+import logging
 from os import path
 
 try:
@@ -14,6 +15,7 @@ from .errors import ValidationError, NotFoundError, AuthError, \
     MultipleChoicesError
 from .serializers import to_json, to_xml, to_jsonp
 
+logger = logging.getLogger('antiapi')
 
 _serializers = {
     'xml': to_xml,
@@ -191,7 +193,7 @@ def process_api_method(request, handler, content_types, serializer_params,
     except Exception as e:
         if getattr(settings, 'API_DEBUG', False):
             raise
-#        logger.exception(e)
+        logger.exception(e)
         return _http_error(500, 'Unexpected API error',
                            content_type=content_type)
 
